@@ -83,35 +83,38 @@ fn evaluate_one (expression: &str) -> String {
     let mut first_num_string = String::new();
     let mut second_num_string = String::new();
     let mut third_num_string = String::new();
-    let first_index = 0;
     let mut second_index = 0;
     let mut third_index = 0;
+    let mut fourth_index = 0;
+    let mut fifth_index = 0;
     let mut first_operand = b' ';
     let mut second_operand = b' ';
 
-    let mut length = expression.len();
+    let length = expression.len();
 
 
     let bytes = expression.as_bytes();
-    //Use match to find operand when efnumerating. When found, then convert string to number. Maybe use a stack
+    // It's possible to cut down on the time to evaluate if the first operand is mult or division. 
     for (i, &item) in bytes.iter().enumerate() {
-        // f 5 + s 3 + t 2 * 5
+        // f 5 + s 3 t + fo 2 fi * 5
         if item == b'+' || item == b'-' || item == b'*' || item == b'/' {
             if first_num_string != "" {
                 if second_num_string == ""{
                     second_num_string = expression[second_index..i].to_string();
                     second_operand = item;
-                    third_index = i+1;
+                    third_index = i-1;
+                    fourth_index = i+1;
                 }
                 else {
-                    third_num_string = expression[third_index..i].to_string();
+                    third_num_string = expression[fourth_index..i].to_string();
+                    fifth_index = i-1;
                     //Might need the index here for replacement reasons
                     break;
                 }
             }
             else {
                 first_operand = item;
-                first_num_string = expression[first_index..i].to_string();
+                first_num_string = expression[..i].to_string();
                 second_index = i+1;
             }
         } 
@@ -123,7 +126,19 @@ fn evaluate_one (expression: &str) -> String {
         return result;
     }
     else {
+        if third_num_string == "" {
+            third_num_string = expression[fourth_index..length-1].to_string();
+        }
 
+        if first_operand == b'*' || first_operand == b'/' {
+            let mut result = evaluate(first_num_string, second_num_string, first_operand);
+            let rest_of_expression = expression[third_index..].to_string();
+            result.push_str(&rest_of_expression);
+            return result;
+        }
+        else if second_operand == b'*' || second_operand == b'/' {
+            
+        }
     }
 
 
