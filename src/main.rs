@@ -11,6 +11,14 @@ fn main() {
 
     let input = input.trim();
 
+    // let test = String::new();
+    // println!("test{test}test");
+
+    // if test == ""
+    // {
+    //     println!("Wooo!");
+    // }
+
     //Maybe implement some detection for bad expressions
 
     // let (first, second) = paranthesis_locator(input);
@@ -59,26 +67,43 @@ fn evaluate_and_replace (expression: &str, beginning_index: &usize, end_index: &
     //Add checks here for if beginning and end are 0
     let sub_expression = &expression[*beginning_index+1..*end_index];
 
+    expression.to_string()
 
 }
 
 fn evaluate (expression: &str) -> (String) {
+
+    let mut first_num_string = String::new();
+    let mut second_num_string = String::new();
+    let mut third_num_string = String::new();
+    let mut first_index = 0;
+    let mut second_index = 0;
+    let mut third_index = 0;
+    let mut first_operand = b' ';
+    let mut second_operand = b' ';
+
+
     let bytes = expression.as_bytes();
-
-    let first_num = 0;
-    let second_num = 0;
-    let mut first_num_string = "";
-    let mut second_num_string = "";
-    let split_index = 0;
-    let mut operand = ' ';
-
     //Use match to find operand when enumerating. When found, then convert string to number. Maybe use a stack
     for (i, &item) in bytes.iter().enumerate() {
+        //Switch to if statement, I don't think there's any point not doing it.
         match item {
             b'+' => {
-                operand = '+';
-                
-            }
+                if first_num_string != "" {
+                    if second_num_string == ""{
+                        second_num_string = expression[second_index..i].to_string();
+                        second_operand = item;
+                    }
+                    else {
+                        third_num_string = expression[]
+                    }
+                }
+
+                first_operand = item;
+                first_num_string = expression[first_index..i].to_string();
+                second_index = i+1;
+            },
+            _ => {println!("Uh oh! Match wen't wrong");}
         }
         
     }
