@@ -11,6 +11,13 @@ fn main() {
 
     let input = input.trim();
 
+    // let first_num_string = String::from("24");
+    // let second_num_string = String::from("53");
+    // let operand = b'+';
+    // let result = evaluate(first_num_string, second_num_string, operand);
+
+    // println!("Result: {result}");
+
     // let test = String::new();
     // println!("test{test}test");
 
@@ -71,42 +78,70 @@ fn evaluate_and_replace (expression: &str, beginning_index: &usize, end_index: &
 
 }
 
-fn evaluate (expression: &str) -> (String) {
+fn evaluate_one (expression: &str) -> String {
 
     let mut first_num_string = String::new();
     let mut second_num_string = String::new();
     let mut third_num_string = String::new();
-    let mut first_index = 0;
+    let first_index = 0;
     let mut second_index = 0;
     let mut third_index = 0;
     let mut first_operand = b' ';
     let mut second_operand = b' ';
 
+    let mut length = expression.len();
+
 
     let bytes = expression.as_bytes();
-    //Use match to find operand when enumerating. When found, then convert string to number. Maybe use a stack
+    //Use match to find operand when efnumerating. When found, then convert string to number. Maybe use a stack
     for (i, &item) in bytes.iter().enumerate() {
-        //Switch to if statement, I don't think there's any point not doing it.
-        match item {
-            b'+' => {
-                if first_num_string != "" {
-                    if second_num_string == ""{
-                        second_num_string = expression[second_index..i].to_string();
-                        second_operand = item;
-                    }
-                    else {
-                        third_num_string = expression[]
-                    }
+        // f 5 + s 3 + t 2 * 5
+        if item == b'+' || item == b'-' || item == b'*' || item == b'/' {
+            if first_num_string != "" {
+                if second_num_string == ""{
+                    second_num_string = expression[second_index..i].to_string();
+                    second_operand = item;
+                    third_index = i+1;
                 }
-
+                else {
+                    third_num_string = expression[third_index..i].to_string();
+                    //Might need the index here for replacement reasons
+                    break;
+                }
+            }
+            else {
                 first_operand = item;
                 first_num_string = expression[first_index..i].to_string();
                 second_index = i+1;
-            },
-            _ => {println!("Uh oh! Match wen't wrong");}
-        }
-        
+            }
+        } 
     }
 
+    if second_operand == b' ' {
+        second_num_string = expression[second_index..length-1].to_string();
+        let result = evaluate(first_num_string, second_num_string, first_operand);
+        return result;
+    }
+    else {
+
+    }
+
+
+
     expression.to_string()
+}
+
+
+fn evaluate (first_num_string: String, second_num_string: String, operand: u8) -> String {
+    let first_num = first_num_string.parse::<f32>().unwrap();
+    let second_num = second_num_string.parse::<f32>().unwrap();
+    let mut result: f32 = 0.0;
+    match operand {
+        b'+' => {result = first_num + second_num;}
+        b'-' => {result = first_num - second_num;}
+        b'*' => {result = first_num * second_num;}
+        b'/' => {result = first_num / second_num;}
+        _ => {println!("Uh oh! Something went wrong in match");}
+    }
+    result.to_string()
 }
