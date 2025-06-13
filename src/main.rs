@@ -11,9 +11,8 @@ fn main() {
 
     let input = input.trim();
 
-    let expression = String::from("24+52*100+4");
+    let expression = String::from("5+3*5/2+20-3*5");
     let mut result = evaluate_one(&expression);
-    result = evaluate_one(&result);
     result = evaluate_one(&result);
     println!("Result: {result}");
 }
@@ -59,6 +58,11 @@ fn evaluate_and_replace (expression: &str, beginning_index: &usize, end_index: &
 
 fn evaluate_one (expression: &str) -> String {
 
+    // If expression is already 1 number with no operands, return it.
+    if expression.parse::<f32>().is_ok() {
+        return expression.to_string();
+    }
+
     let mut first_num_string = String::new();
     let mut second_num_string = String::new();
     let mut third_num_string = String::new();
@@ -76,7 +80,16 @@ fn evaluate_one (expression: &str) -> String {
     // It's possible to cut down on the time to evaluate if the first operand is mult or division. 
     for (i, &item) in bytes.iter().enumerate() {
         // f 5 + s 3 t + fo 2 fi * 5
-        if item == b'+' || item == b'-' || item == b'*' || item == b'/' {
+
+        //if item == b'+' || item == b'-' || item == b'*' || item == b'/' {
+        //if let b'+' | b'-' | b'*' | b'/' = item {
+        if [b'+', b'-', b'*', b'/'].contains(&item) {
+
+            // Makes sure that negative symbol of numbers is ignored
+            if item == b'-' &&  [b'+', b'-', b'*', b'/'].contains(&bytes[i-1]) {
+                continue;
+            }
+
             if first_num_string != "" {
                 if second_num_string == ""{
                     second_num_string = expression[second_index..i].to_string();
