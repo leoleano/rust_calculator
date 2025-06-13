@@ -11,32 +11,11 @@ fn main() {
 
     let input = input.trim();
 
-    // let first_num_string = String::from("24");
-    // let second_num_string = String::from("53");
-    // let operand = b'+';
-    // let result = evaluate(first_num_string, second_num_string, operand);
-
-    // println!("Result: {result}");
-
-    // let test = String::new();
-    // println!("test{test}test");
-
-    // if test == ""
-    // {
-    //     println!("Wooo!");
-    // }
-
-    //Maybe implement some detection for bad expressions
-
-    // let (first, second) = paranthesis_locator(input);
-
-    // println!("First: {first}, second: {second}");
-
-    // // let first = 0;
-
-    // let (first_chunk, second_chunk) = evaluate_and_replace(input, &first, &second);
-
-    // println!("First chunk: {first_chunk}, second chunk: {second_chunk}");
+    let expression = String::from("24+52*100+4");
+    let mut result = evaluate_one(&expression);
+    result = evaluate_one(&result);
+    result = evaluate_one(&result);
+    println!("Result: {result}");
 }
 
 fn paranthesis_replace (expression: &str) -> &str {
@@ -102,13 +81,12 @@ fn evaluate_one (expression: &str) -> String {
                 if second_num_string == ""{
                     second_num_string = expression[second_index..i].to_string();
                     second_operand = item;
-                    third_index = i-1;
+                    third_index = i;
                     fourth_index = i+1;
                 }
                 else {
                     third_num_string = expression[fourth_index..i].to_string();
-                    fifth_index = i-1;
-                    //Might need the index here for replacement reasons
+                    fifth_index = i;
                     break;
                 }
             }
@@ -121,29 +99,33 @@ fn evaluate_one (expression: &str) -> String {
     }
 
     if second_operand == b' ' {
-        second_num_string = expression[second_index..length-1].to_string();
+        second_num_string = expression[second_index..length].to_string();
         let result = evaluate(first_num_string, second_num_string, first_operand);
         return result;
     }
     else {
         if third_num_string == "" {
-            third_num_string = expression[fourth_index..length-1].to_string();
+            third_num_string = expression[fourth_index..length].to_string();
+            fifth_index = length;
         }
-
-        if first_operand == b'*' || first_operand == b'/' {
+        
+        if second_operand == b'*' || second_operand == b'/' {
+            let result = evaluate(second_num_string, third_num_string, second_operand);
+            let mut before_result = expression[..second_index].to_string();
+            let after_result = expression[fifth_index..].to_string();
+            before_result.push_str(&result);
+            before_result.push_str(&after_result);
+            return before_result;
+        }
+        else {
             let mut result = evaluate(first_num_string, second_num_string, first_operand);
             let rest_of_expression = expression[third_index..].to_string();
             result.push_str(&rest_of_expression);
             return result;
         }
-        else if second_operand == b'*' || second_operand == b'/' {
-            
-        }
+        
     }
 
-
-
-    expression.to_string()
 }
 
 
