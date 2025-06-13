@@ -1,7 +1,8 @@
 use std::io;
 
 fn main() {
-    println!("Welcome to the basic calculator!\nPlease enter a mathematical expression in one line that doesn't contain exponents, but basic mathematical operations (+ - * /).\nMultiple operations are allowed.");
+    println!("Welcome to the basic calculator!\nPlease enter a mathematical expression in one line that doesn't contain exponents, but basic mathematical operations (+ - * /).");
+    println!("Multiple operations, parantheses, and negative numbers are allowed.");
 
     let mut input = String::new();
     
@@ -9,18 +10,24 @@ fn main() {
         .read_line(&mut input)
         .expect("Failed to read line");
 
-    let input = input.trim();
+    let input = input.trim().split_whitespace().collect::<String>();
 
-    let expression = String::from("-5+3*5/2+20-3*5*-2");
-    //let expression = String::from("-5+7--1");
-    let result = evaluate_one(expression);
+    let result = evaluate_whole(input.to_string());
+
     println!("Result: {result}");
 }
 
-fn paranthesis_replace (expression: &str) -> &str {
+fn evaluate_whole (mut expression: String) -> String {
+    
     loop{
-        let (beginning_index, end_index) = paranthesis_locator(expression);
+        let (beginning_index, end_index) = paranthesis_locator(&expression);
 
+        if beginning_index == 0 && end_index == 0 {
+            let final_result = evaluate(expression);
+            return final_result;
+        }
+        
+        expression = evaluate_and_replace(&expression, beginning_index, end_index);
     }
 }
 
@@ -45,18 +52,27 @@ fn paranthesis_locator (expression: &str) -> (usize, usize) {
 
 }
 
-fn evaluate_and_replace (expression: &str, beginning_index: &usize, end_index: &usize) -> (String) {
-    let first_chunk = &expression[..*beginning_index];
-    let second_chunk = &expression[*end_index+1..];
+fn evaluate_and_replace (expression: &str, beginning_index: usize, end_index: usize) -> String {
+    let mut second_chunk = String::new();
+    
+    let first_chunk = expression[..beginning_index].to_string();
+    if end_index != expression.len()-1 {
+        second_chunk = expression[end_index+1..].to_string();
+    }
 
-    //Add checks here for if beginning and end are 0
-    let sub_expression = &expression[*beginning_index+1..*end_index];
+    let sub_expression = &expression[beginning_index+1..end_index];
+    let expression_result = evaluate(sub_expression.to_string());
 
-    expression.to_string()
+    let mut result = String::new();
+    result.push_str(&first_chunk);
+    result.push_str(&expression_result);
+    result.push_str(&second_chunk);
+
+    result
 
 }
 
-fn evaluate_one (mut expression: String) -> String {
+fn evaluate (mut expression: String) -> String {
 
 
     'outer: loop {
@@ -81,7 +97,6 @@ fn evaluate_one (mut expression: String) -> String {
         let bytes = expression.as_bytes();
         // It's possible to cut down on the time to evaluate if the first operand is mult or division. 
         'inner: for (i, &item) in bytes.iter().enumerate() {
-            // f 5 + s 3 t + fo 2 fi * 5
 
             //if item == b'+' || item == b'-' || item == b'*' || item == b'/' {
             //if let b'+' | b'-' | b'*' | b'/' = item {
@@ -115,7 +130,7 @@ fn evaluate_one (mut expression: String) -> String {
 
         if second_operand == b' ' {
             second_num_string = expression[second_index..length].to_string();
-            let result = evaluate(first_num_string, second_num_string, first_operand);
+            let result = basic_evaluate(first_num_string, second_num_string, first_operand);
             expression = result;
             continue 'outer;
         }
@@ -126,7 +141,7 @@ fn evaluate_one (mut expression: String) -> String {
             }
             
             if second_operand == b'*' || second_operand == b'/' {
-                let result = evaluate(second_num_string, third_num_string, second_operand);
+                let result = basic_evaluate(second_num_string, third_num_string, second_operand);
                 let mut before_result = expression[..second_index].to_string();
                 let after_result = expression[fifth_index..].to_string();
                 before_result.push_str(&result);
@@ -135,7 +150,7 @@ fn evaluate_one (mut expression: String) -> String {
                 continue 'outer;
             }
             else {
-                let mut result = evaluate(first_num_string, second_num_string, first_operand);
+                let mut result = basic_evaluate(first_num_string, second_num_string, first_operand);
                 let rest_of_expression = expression[third_index..].to_string();
                 result.push_str(&rest_of_expression);
                 expression = result;
@@ -148,7 +163,7 @@ fn evaluate_one (mut expression: String) -> String {
 }
 
 
-fn evaluate (first_num_string: String, second_num_string: String, operand: u8) -> String {
+fn basic_evaluate (first_num_string: String, second_num_string: String, operand: u8) -> String {
     let first_num = first_num_string.parse::<f32>().unwrap();
     let second_num = second_num_string.parse::<f32>().unwrap();
     let mut result: f32 = 0.0;
