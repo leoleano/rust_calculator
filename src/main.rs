@@ -11,9 +11,9 @@ fn main() {
 
     let input = input.trim();
 
-    let expression = String::from("5+3*5/2+20-3*5");
-    let mut result = evaluate_one(&expression);
-    result = evaluate_one(&result);
+    let expression = String::from("-5+3*5/2+20-3*5*-2");
+    //let expression = String::from("-5+7--1");
+    let result = evaluate_one(expression);
     println!("Result: {result}");
 }
 
@@ -56,87 +56,93 @@ fn evaluate_and_replace (expression: &str, beginning_index: &usize, end_index: &
 
 }
 
-fn evaluate_one (expression: &str) -> String {
-
-    // If expression is already 1 number with no operands, return it.
-    if expression.parse::<f32>().is_ok() {
-        return expression.to_string();
-    }
-
-    let mut first_num_string = String::new();
-    let mut second_num_string = String::new();
-    let mut third_num_string = String::new();
-    let mut second_index = 0;
-    let mut third_index = 0;
-    let mut fourth_index = 0;
-    let mut fifth_index = 0;
-    let mut first_operand = b' ';
-    let mut second_operand = b' ';
-
-    let length = expression.len();
+fn evaluate_one (mut expression: String) -> String {
 
 
-    let bytes = expression.as_bytes();
-    // It's possible to cut down on the time to evaluate if the first operand is mult or division. 
-    for (i, &item) in bytes.iter().enumerate() {
-        // f 5 + s 3 t + fo 2 fi * 5
+    'outer: loop {
+        // If expression is already 1 number with no operands, return it.
+        if expression.parse::<f32>().is_ok() {
+            return expression.to_string();
+        }
 
-        //if item == b'+' || item == b'-' || item == b'*' || item == b'/' {
-        //if let b'+' | b'-' | b'*' | b'/' = item {
-        if [b'+', b'-', b'*', b'/'].contains(&item) {
+        let mut first_num_string = String::new();
+        let mut second_num_string = String::new();
+        let mut third_num_string = String::new();
+        let mut second_index = 0;
+        let mut third_index = 0;
+        let mut fourth_index = 0;
+        let mut fifth_index = 0;
+        let mut first_operand = b' ';
+        let mut second_operand = b' ';
 
-            // Makes sure that negative symbol of numbers is ignored
-            if item == b'-' &&  [b'+', b'-', b'*', b'/'].contains(&bytes[i-1]) {
-                continue;
-            }
+        let length = expression.len();
 
-            if first_num_string != "" {
-                if second_num_string == ""{
-                    second_num_string = expression[second_index..i].to_string();
-                    second_operand = item;
-                    third_index = i;
-                    fourth_index = i+1;
+
+        let bytes = expression.as_bytes();
+        // It's possible to cut down on the time to evaluate if the first operand is mult or division. 
+        'inner: for (i, &item) in bytes.iter().enumerate() {
+            // f 5 + s 3 t + fo 2 fi * 5
+
+            //if item == b'+' || item == b'-' || item == b'*' || item == b'/' {
+            //if let b'+' | b'-' | b'*' | b'/' = item {
+            if [b'+', b'-', b'*', b'/'].contains(&item) {
+
+                // Makes sure that negative symbol of numbers is ignored
+                if item == b'-' && i > 0 && [b'+', b'-', b'*', b'/'].contains(&bytes[i-1]) {
+                    continue 'inner;
+                }
+
+                if first_num_string != "" {
+                    if second_num_string == ""{
+                        second_num_string = expression[second_index..i].to_string();
+                        second_operand = item;
+                        third_index = i;
+                        fourth_index = i+1;
+                    }
+                    else {
+                        third_num_string = expression[fourth_index..i].to_string();
+                        fifth_index = i;
+                        break 'inner;
+                    }
                 }
                 else {
-                    third_num_string = expression[fourth_index..i].to_string();
-                    fifth_index = i;
-                    break;
+                    first_operand = item;
+                    first_num_string = expression[..i].to_string();
+                    second_index = i+1;
                 }
-            }
-            else {
-                first_operand = item;
-                first_num_string = expression[..i].to_string();
-                second_index = i+1;
-            }
-        } 
-    }
-
-    if second_operand == b' ' {
-        second_num_string = expression[second_index..length].to_string();
-        let result = evaluate(first_num_string, second_num_string, first_operand);
-        return result;
-    }
-    else {
-        if third_num_string == "" {
-            third_num_string = expression[fourth_index..length].to_string();
-            fifth_index = length;
+            } 
         }
-        
-        if second_operand == b'*' || second_operand == b'/' {
-            let result = evaluate(second_num_string, third_num_string, second_operand);
-            let mut before_result = expression[..second_index].to_string();
-            let after_result = expression[fifth_index..].to_string();
-            before_result.push_str(&result);
-            before_result.push_str(&after_result);
-            return before_result;
+
+        if second_operand == b' ' {
+            second_num_string = expression[second_index..length].to_string();
+            let result = evaluate(first_num_string, second_num_string, first_operand);
+            expression = result;
+            continue 'outer;
         }
         else {
-            let mut result = evaluate(first_num_string, second_num_string, first_operand);
-            let rest_of_expression = expression[third_index..].to_string();
-            result.push_str(&rest_of_expression);
-            return result;
+            if third_num_string == "" {
+                third_num_string = expression[fourth_index..length].to_string();
+                fifth_index = length;
+            }
+            
+            if second_operand == b'*' || second_operand == b'/' {
+                let result = evaluate(second_num_string, third_num_string, second_operand);
+                let mut before_result = expression[..second_index].to_string();
+                let after_result = expression[fifth_index..].to_string();
+                before_result.push_str(&result);
+                before_result.push_str(&after_result);
+                expression = before_result;
+                continue 'outer;
+            }
+            else {
+                let mut result = evaluate(first_num_string, second_num_string, first_operand);
+                let rest_of_expression = expression[third_index..].to_string();
+                result.push_str(&rest_of_expression);
+                expression = result;
+                continue 'outer;
+            }
+            
         }
-        
     }
 
 }
